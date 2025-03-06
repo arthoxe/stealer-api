@@ -2,14 +2,15 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const DATA_FILE = path.join(__dirname, 'links.json');
+const KEYS_FILE = path.join(__dirname, 'keys.json');
 
 module.exports = async (req, res) => {
-  // Permettre CORS
+  // Allow CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
-  // Gérer les requêtes OPTIONS (pre-flight)
+  // Handle OPTIONS (pre-flight)
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -25,6 +26,17 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // Verify the private key exists
+    let keys = {};
+    if (await fs.pathExists(KEYS_FILE)) {
+      keys = await fs.readJson(KEYS_FILE);
+    }
+    
+    if (!keys[privateKey]) {
+      return res.status(403).json({ error: 'Invalid private key' });
+    }
+
+    // Store the link
     let data = {};
     if (await fs.pathExists(DATA_FILE)) {
       data = await fs.readJson(DATA_FILE);
@@ -36,11 +48,11 @@ module.exports = async (req, res) => {
     data[privateKey].push(gofileLink);
 
     await fs.writeJson(DATA_FILE, data, { spaces: 2 });
-    console.log(`Lien ${gofileLink} ajouté pour la clé ${privateKey}`);
+    console.log(`Link ${gofileLink} added for key ${privateKey}`);
 
     return res.status(200).json({ message: 'Link saved successfully' });
   } catch (e) {
-    console.error(`Erreur: ${e.stack}`);
+    console.error(`Error: ${e.stack}`);
     return res.status(500).json({ error: 'Server error, please try again' });
   }
 };
