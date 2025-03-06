@@ -1,0 +1,11 @@
+{
+    "name": "stealer-api",
+    "version": "1.0.0",
+    "scripts": {
+      "start": "node api/submit.js",
+      "deploy": "vercel --prod"
+    },
+    "dependencies": {
+      "fs-extra": "^11.2.0"
+    }
+  }
